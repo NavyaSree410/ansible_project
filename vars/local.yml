@@ -1,0 +1,44 @@
+---
+- name: Set up my first web server
+  hosts: localhost
+  connection: local
+  become: true
+
+  vars_files:
+    - vars/main.yml
+
+  tasks:
+    - name: Install nginx and curl
+      ansible.builtin.package:
+        name: "{{ baseline_packages }}"
+        state: latest
+
+    - name: Create a new user
+      ansible.builtin.user:
+        name: "{{ deploy_user }}"
+        groups: "{{ deploy_group }}"
+        append: true
+        shell: /bin/bash
+        create_home: true
+
+    - name: Create a simple webpage
+      ansible.builtin.copy:
+        dest: "{{ web_root }}/index.html"
+        mode: "0644"
+        content: |
+          <h1>Hello! Ansible built this server.</h1>
+          <p>Server name: {{ ansible_facts['hostname'] }}</p>
+
+    - name: Start the nginx web server
+      ansible.builtin.service:
+        name: "{{ web_service_name }}"
+        state: started
+        enabled: true
+
+    - name: Check GitHub every 15 minutes for updates
+      ansible.builtin.cron:
+        name: ansible-pull auto update
+        user: root
+        minute: "*/15"
+        job: "ansible-pull -o -U {{ ansible_pull_repo }} >> /var/log/ansible-pull.log 2>&1"
+        cron_file: ansible-pull-web
