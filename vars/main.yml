@@ -1,0 +1,10 @@
+---
+deploy_user: webadmin
+deploy_group: sudo
+web_service_name: nginx
+web_root: /var/www/html
+app_environment: practice
+ansible_pull_repo: https://github.com/NavyaSree410/ansible_project.git
+baseline_packages:
+  - nginx
+  - curl
